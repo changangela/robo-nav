@@ -2,7 +2,7 @@
     Getting Started Code for IEEE Ottawa Robotics Competition - Defy The Maze Competition
     Written by David Bascelli
     Febuary 25, 2016
-    
+
     This code is provided as an example to demonstrate how use the orc libraries to get
     started on programming your robot to compete in the competition.
     All it does is go forward until the ir sensors detect black.
@@ -29,176 +29,195 @@ MotorControl rightMotor(right_motor_port);
 MotorControl leftMotor(left_motor_port);
 IRControl rightIR(right_ir_pin);
 IRControl leftIR(left_ir_pin);
-UltrasonicControl ultrasonic(trig_pin,echo_pin);
+UltrasonicControl ultrasonic(trig_pin, echo_pin);
 
 //All sketches must have setup and loop. setup runs ones at when the Arduino turns on or resets,
 //loop repeats forever
-void setup(){
+void setup() {
   //All the setup happens when we declare the objects so nothing is needed where
 }
 
-int forward = 90;
+bool obstacleAhead = false;
+int forward = 60;
 int lChange = 0;
 int rChange = 0;
 int posX = 0;
 int posY = 0;
 int direction = 'u';
-int orientation = 'x';
-int turn = 20;
 bool reverse = false;
-//void Turn(){
-//  if(orientation == 'x'){
-//    lChange -= turn;
-//    rChange += turn;
-//    while(!(!rightIR.isBlack()&& leftIR.isBlack())){
-//      MoveForwards();
-//    }
-//    orientation = 'y';
-//  }
-//  else if(orientation == 'y'){
-//    lChange += turn;
-//    rChange -= turn;
-//    while(!(rightIR.isBlack()&& !leftIR.isBlack())){
-//      MoveForwards();
-//    }
-//    orientation = 'x';
-//  }
-//  Stop();
-//  if(ultrasonic.detect()){
-//    //Trap();
-//  }
-//}
 
-void MoveForwards(){
-  rightMotor.forward((forward+rChange)*85/90);
-  leftMotor.forward(forward+lChange);
+bool trapped = true;////////ADDITION////////
+
+void MoveForwards() {
+   reverse = false;////////ADDITION////////
+  rightMotor.forward((forward + rChange));
+  leftMotor.forward((forward + lChange)*90/75);
 }
-void MoveBackwards(){
-  rightMotor.reverse((forward+rChange)*85/90);
-  leftMotor.reverse(forward+lChange);
+void MoveBackwards() {
+  reverse = true;////////ADDITION////////
+  rightMotor.reverse((forward + rChange));
+  leftMotor.reverse((forward + lChange));
 }
 
- void TurnRight(){
-  //for(int i = 0; i < 30000; i++){
-  while(leftIR.isBlack() || rightIR.isBlack()){
+void TurnRight() {
+   while (leftIR.isBlack() || rightIR.isBlack()) {
     rightMotor.reverse(0);
-    leftMotor.forward(200);
+    leftMotor.forward(90);
   }
-    
-  /*}
-  for(int i = 0; i < 30000; i++){
-    rightMotor.reverse(105);
-    leftMotor.forward(105);
-  }*/
- }
- void TurnLeft(){
-  while(leftIR.isBlack() || rightIR.isBlack()){
-    rightMotor.forward(200);
+   while (!leftIR.isBlack() && !rightIR.isBlack()) {
+    rightMotor.reverse(0);
+    leftMotor.forward(90);
+  }
+
+}
+void TurnLeft() {
+  while (leftIR.isBlack() || rightIR.isBlack()) {
+    rightMotor.forward(150);
     leftMotor.reverse(0);
   }
+}
+void TurnUp() {
+  while (rightIR.isBlack() || leftIR.isBlack()) {
+    lChange = 0;
+    rChange=0;
+    MoveForwards();
   }
-  void TurnUp(){
-      while(rightIR.isBlack()&&leftIR.isBlack()){
-        MoveForwards();
-      }
+}
+void TurnBack() {
+ while (leftIR.isBlack() || rightIR.isBlack()) {
+   leftMotor.forward(100);
+   rightMotor.reverse(100);
   }
-  void TurnBack(){
-      while(rightIR.isBlack()&&leftIR.isBlack()){
-        MoveBackwards();
-      }
+  while(!leftIR.isBlack()&&!rightIR.isBlack()){
+    leftMotor.forward(100);
+    rightMotor.reverse(100);
   }
-void Stop(){
+}
+void Stop() {
   rightMotor.halt();
   leftMotor.halt();
 }
 
-void MoveUp(){
-  switch(direction){
+void MoveUp() {
+  switch (direction) {
     case 'd':
-    TurnBack();
-    break;
+      TurnBack();
+      break;
     case 'r':
-    TurnLeft();
-    break;
+      TurnLeft();
+      break;
     case 'l':
-    TurnRight();
-    break;
+      TurnRight();
+      break;
     default:
-        TurnUp();
+      TurnUp();
   }
   direction = 'u';
-  posY++;
 }
-void MoveRight(){
-  switch(direction){
+void MoveRight() {
+  switch (direction) {
     case 'd':
-    TurnLeft();
-    break;
+      TurnLeft();
+      break;
     case 'u':
-    TurnRight();
-    break;
+      TurnRight();
+      break;
     case 'l':
       TurnBack();
-    break;
+      break;
     default:
-TurnUp();
+      TurnUp();
   }
-  direction = 'r';  
-  posX++;
+  direction = 'r';
 }
 
-void Align(char offset){
- int align=10;
-  if (offset == 'l' && !reverse){
+void Align(char offset) {
+  int align =8;
+  if (offset == 'l' && !reverse) {
     lChange = -align;
     rChange = align;
+    while(rightIR.isBlack()&&!leftIR.isBlack()){
     MoveForwards();
+    }
   }
-  else if(offset == 'r' && !reverse){
+  else if (offset == 'r' && !reverse) {
     lChange = align;
     rChange = -align;
+    while(leftIR.isBlack() && !rightIR.isBlack()){
     MoveForwards();
+    }
   }
-  else if (offset == 'l' && reverse){
+  else if (offset == 'l' && reverse) {
     lChange = align;
     rChange = -align;
-   MoveBackwards();
+    MoveBackwards();
   }
-  else if(offset == 'r' && reverse){
+  else if (offset == 'r' && reverse) {
     lChange = align;
     rChange = -align;
     MoveBackwards();
   }
 }
 
-void loop(){
-  if (rightIR.isBlack()||leftIR.isBlack()){
-    if (rightIR.isBlack()&&leftIR.isBlack()){
-     
-      if(ultrasonic.detect()){
-        if (direction = 'u'){
+void loop() {
+  if (posX == 3 && posY == 3) {
+    while (true) {
+      Stop();
+    }
+  }
+  if (rightIR.isBlack() && leftIR.isBlack()) {
+   if(!obstacleAhead){
+    if (direction == 'u') {
+      posY++;
+    }
+    else if (direction == 'r') {
+      posX++;
+    }
+    else if (direction == 'd') {
+      posY--;
+    } else {
+      posX--;
+    }
+   }
+    if (ultrasonic.detect()||obstacleAhead) {
+      if (direction == 'u') {
+        MoveRight();
+      }
+      else if (direction == 'r') {
+        MoveUp();
+      }
+      else {
+      }
+    } else {
+      if (direction == 'u') {
+        if (posY >= 3) {
           MoveRight();
-        }
-        else if (direction = 'r'){
+        } else {
           MoveUp();
         }
-      }else{
-                if(direction = 'u'){
+      }
+      else if (direction == 'r') {
+        if (posX >= 3) {
           MoveUp();
-        }
-        else if(direction = 'r'){
+        } else {
           MoveRight();
         }
       }
-     
-    }else if (rightIR.isBlack()){
-      Align('l');
+      else {
+      }
     }
-    else{
-        Align('r');
-    }
+    obstacleAhead=false;
   }
-  else { 
+  else if (rightIR.isBlack()) {
+    Align('l');
+  }
+  else if (leftIR.isBlack()) {
+    Align('r');
+  }
+  else {
+    lChange = 0;
+    rChange = 0;
     MoveForwards();
   }
+
 }
