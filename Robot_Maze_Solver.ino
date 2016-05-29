@@ -38,11 +38,12 @@ void setup() {
 }
 
 bool obstacleAhead = false;
-int forward = 60;
+int forward = 75;
 int lChange = 0;
 int rChange = 0;
 int posX = 0;
 int posY = 0;
+int turn = 100;
 int direction = 'u';
 bool reverse = false;
 
@@ -51,7 +52,7 @@ bool trapped = true;////////ADDITION////////
 void MoveForwards() {
    reverse = false;////////ADDITION////////
   rightMotor.forward((forward + rChange));
-  leftMotor.forward((forward + lChange)*90/75);
+  leftMotor.forward((forward + lChange)*90/70);
 }
 void MoveBackwards() {
   reverse = true;////////ADDITION////////
@@ -59,23 +60,81 @@ void MoveBackwards() {
   leftMotor.reverse((forward + lChange));
 }
 
-void TurnRight() {
+void TurnRight(){
    while (leftIR.isBlack() || rightIR.isBlack()) {
     rightMotor.reverse(0);
-    leftMotor.forward(90);
+    leftMotor.forward(turn);
   }
    while (!leftIR.isBlack() && !rightIR.isBlack()) {
     rightMotor.reverse(0);
-    leftMotor.forward(90);
-  }
-
+    leftMotor.forward(turn);
+   }
+  if(ultrasonic.detect()){
+    if (direction == 'u'){
+  posY--;
+}else if (direction =='r'){
+   posX--;
 }
-void TurnLeft() {
+    trapped = true;
+     while (leftIR.isBlack()) {
+    rightMotor.reverse(turn);
+    leftMotor.forward(0);
+  }
+   while (!leftIR.isBlack()) {
+    rightMotor.reverse(turn);
+    leftMotor.forward(0);
+  }
+  }
+}
+
+
+void TurnLeft(){
   while (leftIR.isBlack() || rightIR.isBlack()) {
-    rightMotor.forward(150);
+    rightMotor.forward(turn);
     leftMotor.reverse(0);
   }
+    while (!leftIR.isBlack() && !rightIR.isBlack()) {
+    rightMotor.forward(turn);
+    leftMotor.reverse(0);
+  }
+
+  if(ultrasonic.detect()){
+
+if (direction == 'u'){
+  posY-=1;
+}else if (direction =='r'){
+   posX-=1;
 }
+    trapped=true;
+         while (rightIR.isBlack()) {
+    rightMotor.reverse(turn);
+    leftMotor.forward(0);
+  }
+   while (!rightIR.isBlack()) {
+    rightMotor.reverse(turn);
+    leftMotor.forward(0);
+  }
+
+  }
+}
+
+//void TurnRight() {
+//   while (leftIR.isBlack() || rightIR.isBlack()) {
+//    rightMotor.reverse(0);
+//    leftMotor.forward(90);
+//  }
+//   while (!leftIR.isBlack() && !rightIR.isBlack()) {
+//    rightMotor.reverse(0);
+//    leftMotor.forward(90);
+//  }
+//
+//}
+//void TurnLeft() {
+//  while (leftIR.isBlack() || rightIR.isBlack()) {
+//    rightMotor.forward(150);
+//    leftMotor.reverse(0);
+//  }
+//}
 void TurnUp() {
   while (rightIR.isBlack() || leftIR.isBlack()) {
     lChange = 0;
@@ -85,12 +144,12 @@ void TurnUp() {
 }
 void TurnBack() {
  while (leftIR.isBlack() || rightIR.isBlack()) {
-   leftMotor.forward(100);
-   rightMotor.reverse(100);
+   leftMotor.forward(turn*1.5);
+   rightMotor.reverse(turn*1.5);
   }
   while(!leftIR.isBlack()&&!rightIR.isBlack()){
-    leftMotor.forward(100);
-    rightMotor.reverse(100);
+    leftMotor.forward(turn);
+    rightMotor.reverse(turn);
   }
 }
 void Stop() {
@@ -131,8 +190,42 @@ void MoveRight() {
   direction = 'r';
 }
 
+void MoveDown(){
+  switch (direction) {
+    case 'u':
+      TurnBack();
+      break;
+    case 'r':
+      TurnRight();
+      break;
+    case 'l':
+      TurnLeft();
+      break;
+    default:
+      TurnUp();
+  }
+  direction = 'd';
+}
+
+void MoveLeft() {
+  switch (direction) {
+    case 'u':
+      TurnLeft();
+      break;
+    case 'd':
+      TurnRight();
+      break;
+    case 'r':
+      TurnBack();
+      break;
+    default:
+      TurnUp();
+  }
+  direction = 'l';
+}
+
 void Align(char offset) {
-  int align =8;
+  int align =15;
   if (offset == 'l' && !reverse) {
     lChange = -align;
     rChange = align;
@@ -158,6 +251,19 @@ void Align(char offset) {
     MoveBackwards();
   }
 }
+void trap(){
+
+  
+     while (rightIR.isBlack()) {
+    rightMotor.forward(turn);
+    leftMotor.forward(0);
+  }
+   while (!rightIR.isBlack()) {
+    rightMotor.forward(turn);
+    leftMotor.forward(0);
+  }
+
+}
 
 void loop() {
   if (posX == 3 && posY == 3) {
@@ -181,10 +287,27 @@ void loop() {
    }
     if (ultrasonic.detect()||obstacleAhead) {
       if (direction == 'u') {
-        MoveRight();
+        if (posX>=3){
+          MoveLeft();
+        }else{
+          MoveRight();
+          if (trapped){
+            direction = 'd';
+          }
+          trapped = false;
+        }
+
       }
       else if (direction == 'r') {
+       if(posY>=3){
+        MoveDown();
+       }else{
         MoveUp();
+                            if (trapped){
+            direction = 'l';
+          }
+          trapped = false;
+       }
       }
       else {
       }
@@ -203,7 +326,11 @@ void loop() {
           MoveRight();
         }
       }
+      else if(direction =='d'){
+        MoveRight();
+      }
       else {
+        MoveUp();
       }
     }
     obstacleAhead=false;
