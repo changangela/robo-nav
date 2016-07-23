@@ -1,0 +1,9 @@
+IRControl	KEYWORD1
+isBlack	KEYWORD2
+MotorControl	KEYWORD1
+forward	KEYWORD2
+reverse	KEYWORD2
+halt	KEYWORD2
+UltrasonicControl	KEYWORD1
+getDistance	KEYWORD2
+detect	KEYWORD2
